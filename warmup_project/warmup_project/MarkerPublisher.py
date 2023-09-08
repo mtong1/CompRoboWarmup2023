@@ -6,13 +6,12 @@ class MarkerPublisher(Node):
     def __init__(self):
         super().__init__('marker_publisher') # where you write name of node 
         self.visual_pub = self.create_publisher(Marker,'visualization_marker', 10)
-        publish_viz
         timer_period = 1
         self.timer = self.create_timer(timer_period, self.publish_marker)
 
     def publish_marker(self):
         marker = Marker() # initialize marker
-        marker.header.frame_id = "base_link"
+        marker.header.frame_id = "odom" # odom for visual bot, base_link for physical bot
         marker.header.stamp = self.get_clock().now().to_msg()
         marker.ns = "marker_sphere"
         marker.id = 0
@@ -28,7 +27,7 @@ class MarkerPublisher(Node):
         marker.pose.orientation.y = 0.0
         marker.pose.orientation.z = 0.0
         marker.pose.orientation.w = 1.0
-        marker.scale.x = 1.0
+        marker.scale.x = 0.1
         marker.scale.y = 0.1
         marker.scale.z = 0.1
         marker.color.a = 1.0; # Don't forget to set the alpha!

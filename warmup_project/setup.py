@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'MarkerPublisher = warmup_project.MarkerPublisher: main'
-            'teleope = warmup_project.teleope: main'
+            'teleop = warmup_project.teleop: main'
         ],
     },
 )
