@@ -13,10 +13,10 @@ class Teleop(Node):
         super().__init__('teleop') # where you write name of node 
         timer_period = 0.2
         self.timer = self.create_timer(timer_period, self.run_loop)
-        self.publisher = self.create_publisher(Twist, 'vel', 10)
-        self.move = Twist()
+        self.publisher = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.move = Twist() # messages to move the robot 
 
-    def getKey(self):
+    def getKey(self): # retrieves the keyboard key pushed 
         settings = termios.tcgetattr(sys.stdin)
         tty.setraw(sys.stdin.fileno())
         select.select([sys.stdin], [], [], 0)
@@ -26,25 +26,34 @@ class Teleop(Node):
 
     def run_loop(self):
         key = None
-        while key != '\x03':            # ctrl C to quit 
-            key = self.getKey()
+        while key != '\x03':            # ctrl C to quit ros2 and run_loop
+            key = self.getKey()         # retrieves key that was pressed 
             
-            if key == "w":
-                self.move.linear.x = 1.0
+            if key == "w":              # goes forward 
+                self.move.angular.z = 0.0
+                self.move.linear.x = 0.3
                 self.publisher.publish(self.move)
 
-            if key == "a":
-                self.move.linear.z = 1.0
+            if key == "a":              # rotates left 
+                self.move.linear.x = 0.0
+                self.move.angular.z = 1.0
                 self.publisher.publish(self.move)
 
-            if key == "s":
-                self.move.linear.x = -1.0
+            if key == "s":              # goes backward
+                self.move.angular.z = 0.0
+                self.move.linear.x = -0.3
                 self.publisher.publish(self.move)
 
-            if key == "d":
-                self.move.linear.z = -1.0
+            if key == "d":              # rotates right
+                self.move.linear.x = 0.0
+                self.move.angular.z = -1.0
                 self.publisher.publish(self.move)
-            # print(key)
+        print("exit")
+        self.move.linear.x = 0.0
+        self.move.angular.z = 0.0
+        self.publisher.publish(self.move)
+        break
+
 
 
 

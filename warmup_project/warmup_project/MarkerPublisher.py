@@ -11,9 +11,9 @@ class MarkerPublisher(Node):
 
     def publish_marker(self):
         marker = Marker() # initialize marker
-        marker.header.frame_id = "odom" # odom for visual bot, base_link for physical bot
+        marker.header.frame_id = "odom" # odom for rviz2 visual bot, base_link for physical bot
         marker.header.stamp = self.get_clock().now().to_msg()
-        marker.ns = "marker_sphere"
+        marker.ns = "marker_sphere"   #namespace
         marker.id = 0
 
         # making sphere at (1,2)
