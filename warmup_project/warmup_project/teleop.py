@@ -52,7 +52,7 @@ class Teleop(Node):
         self.move.linear.x = 0.0
         self.move.angular.z = 0.0
         self.publisher.publish(self.move)
-        break
+        return
 
 
 
