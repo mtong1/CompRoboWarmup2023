@@ -8,14 +8,13 @@ import time
 
 class WallFollower(Node):
     def __init__(self):
-        super.__init__('wall follower')
-
+        super().__init__('wall_follower')
         self.vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.move = Twist()
         self.linear_speed = 0.3
         self.angular_speed = 2.0
 
-        self.laser = self.create_subscription(LaserScan, 'scan', self.LasScan)
+        self.laser = self.create_subscription(LaserScan, 'scan', self.LasScan, 10)
         self.scan_msg = LaserScan()
         self.run_loop()
 
@@ -60,7 +59,14 @@ class WallFollower(Node):
         self.run_robot(move_angle)
 
 
+def main(args=None):
+    rclpy.init(args=args)
+    node = WallFollower()
+    rclpy.spin(node)
+    rclpy.shutdown()
 
+if __name__ == '__main__':
+    main()
 
 # first scan the walls from 45 deg, find the distances, relate the distances to 
 # our robot's coordinate frame, find the angle to turn the robot to be parallel 
