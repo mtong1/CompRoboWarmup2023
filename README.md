@@ -12,6 +12,11 @@ The teleop node is meant to control the robot forward, backwards, left, right, a
     What would you do to improve your project if you had more time?
     What are the key takeaways from this assignment for future robotic programming projects? For each takeaway, provide a sentence or two of elaboration.
 
+DRIVE SQUARE
+    The drive square follower node allows the robot to draw a 1 meter square. The movment is hardcoded based on speed and time. 
+    A diffuclty of 
+
+
 WALL FOLLOWER
     The wall follower node allows the robot to sense the wall nearest to its right, and drive parallel to it. 
 

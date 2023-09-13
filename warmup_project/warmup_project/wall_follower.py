@@ -13,40 +13,55 @@ class WallFollower(Node):
         self.move = Twist()
         self.linear_speed = 0.3
         self.angular_speed = 2.0
+        self.l1 = None
+        self.l2 = None
+        self.scan_msg = None
+        self.laser = self.create_subscription(LaserScan, 'scan', self.parse_scan, 10)
+        timer_period = 2
+        self.timer = self.create_timer(timer_period, self.run_loop)
 
-        self.laser = self.create_subscription(LaserScan, 'scan', self.LasScan, 10)
-        self.scan_msg = LaserScan()
-        self.run_loop()
 
 
-    def LasScan(self, angle):
+    def parse_scan(self, msg):
         # values of distances from robot to wall 
-        return self.scan_msg.ranges(angle)
+        self.scan_msg = msg
+        self.l1 = self.scan_msg.ranges[45]
+        self.l2 = self.scan_msg.ranges[135]
 
+    def magnitude(self, vector):
+        return math.sqrt(sum(pow(element, 2) for element in vector))
 
     def run_robot(self, angle):
-        turn_time = (angle * (math.pi/180))/self.angular_speed
+        print("run robot")
+        turn_time = (angle)/self.angular_speed
         self.move.linear.x = 0.0
         self.move.angular.z = self.angular_speed
         self.vel_pub.publish(self.move)
         time.sleep(turn_time)
+        print("turned")
         self.move.angular.z = 0.0
         self.move.linear.x = self.linear_speed
         self.vel_pub.publish(self.move)
-        
+        print("straight")
 
+    def robot_stop(self):
+        self.move.linear.x = 0.0
+        self.move.angular.z = self.angular_speed
+        self.vel_pub.publish(self.move)
 
     def run_loop(self):
-        # calculating l1 distance from wall
-        l1 = self.LasScan(45)
+
+        #calculating l1 distance from wall
+        self.robot_stop()
+        if self.l1 == None or self.l2 == None:
+            return
         angle = math.pi/4
-        l1_x = math.cos(angle)*l1
-        l1_y = math.sin(angle)*l1
+        l1_x = math.cos(angle)*self.l1
+        l1_y = math.sin(angle)*self.l1
 
         # calculating l2 distance from wall
-        l2 = self.LasScan(135)
-        l2_x = math.cos(angle)*l2
-        l2_y = math.sin(angle)*l2
+        l2_x = math.cos(angle)*self.l2
+        l2_y = math.sin(angle)*self.l2
 
         # shift the wall coordinates over robot frame
         l2_x = l2_x - l1_x
@@ -54,8 +69,15 @@ class WallFollower(Node):
 
         robot_frame = [0,1]
         l2_vec = [l2_x, l2_y]
-        move_angle = math.acos(np.dot(robot_frame, l2_vec) / np.multiply(np.absolute(robot_frame),np.absolute(l2_vec)))
-
+        parta = np.dot(robot_frame, l2_vec)
+        partb = np.multiply(self.magnitude(robot_frame),self.magnitude(l2_vec))
+        if partb == 0:
+            print("is 0")
+            return
+        partc = parta/partb
+        move_angle = math.acos(partc)
+        print(move_angle)
+        # move_angle = math.acos(np.dot(robot_frame, l2_vec) / np.multiply(np.absolute(robot_frame),np.absolute(l2_vec)))
         self.run_robot(move_angle)
 
 
