@@ -27,6 +27,7 @@ class WallFollower(Node):
         self.scan_msg = msg
         self.l1 = self.scan_msg.ranges[45]
         self.l2 = self.scan_msg.ranges[135]
+        print(f"l1 = {self.l1} l2 = {self.l2}")
 
     def magnitude(self, vector):
         return math.sqrt(sum(pow(element, 2) for element in vector))
@@ -35,7 +36,7 @@ class WallFollower(Node):
         print("run robot")
         turn_time = (angle)/self.angular_speed
         self.move.linear.x = 0.0
-        self.move.angular.z = self.angular_speed
+        self.move.angular.z = -1 * self.angular_speed
         self.vel_pub.publish(self.move)
         time.sleep(turn_time)
         print("turned")
@@ -46,38 +47,36 @@ class WallFollower(Node):
 
     def robot_stop(self):
         self.move.linear.x = 0.0
-        self.move.angular.z = self.angular_speed
+        self.move.angular.z = 0.0
         self.vel_pub.publish(self.move)
 
     def run_loop(self):
 
         #calculating l1 distance from wall
         self.robot_stop()
-        if self.l1 == None or self.l2 == None:
+        if self.l1 == math.inf or self.l2 == math.inf:
             return
-        angle = math.pi/4
-        l1_x = math.cos(angle)*self.l1
-        l1_y = math.sin(angle)*self.l1
-
+        angle1 = math.pi/4
+        l1_x = math.cos(angle1)*self.l1
+        l1_y = math.sin(angle1)*self.l1
+        angle2 = math.pi*3/4
         # calculating l2 distance from wall
-        l2_x = math.cos(angle)*self.l2
-        l2_y = math.sin(angle)*self.l2
-
+        l2_x = math.cos(angle2)*self.l2
+        l2_y = math.sin(angle2)*self.l2
         # shift the wall coordinates over robot frame
-        l2_x = l2_x - l1_x
-        l2_y = l2_y - l1_y
+        wall_x = l1_x - l2_x
+        wall_y = l1_y - l2_y
 
-        robot_frame = [0,1]
-        l2_vec = [l2_x, l2_y]
-        parta = np.dot(robot_frame, l2_vec)
-        partb = np.multiply(self.magnitude(robot_frame),self.magnitude(l2_vec))
+        robot_frame = [1,0]
+        wall_vec = [wall_x, wall_y]
+        parta = np.dot(robot_frame, wall_vec)
+        partb = np.multiply(self.magnitude(robot_frame),self.magnitude(wall_vec))
         if partb == 0:
             print("is 0")
             return
         partc = parta/partb
         move_angle = math.acos(partc)
-        print(move_angle)
-        # move_angle = math.acos(np.dot(robot_frame, l2_vec) / np.multiply(np.absolute(robot_frame),np.absolute(l2_vec)))
+        print(f"move angle: {move_angle}")
         self.run_robot(move_angle)
 
 
