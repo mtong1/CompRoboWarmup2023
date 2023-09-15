@@ -11,6 +11,7 @@ class WallFollower(Node):
         super().__init__('wall_follower')
         self.vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.laser = self.create_subscription(LaserScan, 'scan', self.parse_scan, 10)
+        timer_period = 2
         self.timer = self.create_timer(timer_period, self.run_loop)
         self.move = Twist()
         self.linear_speed = 0.3
@@ -18,7 +19,7 @@ class WallFollower(Node):
         self.l1 = None
         self.l2 = None
         self.scan_msg = None
-        timer_period = 2
+
 
     def parse_scan(self, msg):
         '''
