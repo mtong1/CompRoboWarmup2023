@@ -28,12 +28,13 @@ class FiniteStateController(Node):
         if self.state == "predator":
             #Find closest object
             self.scan_msg = msg    
+            self.closest_angle = 0
             for i in range(0,360):
                 if self.scan_msg.ranges[i] < self.closest_dist and self.scan_msg.ranges[i] < 3: # units: meters
                     self.closest_dist = self.scan_msg.ranges[i]
                     self.closest_angle = i
 
-            print(self.closest_angle)
+            print(self.closest_dist)
         else: 
             self.closest_angle = 0
             for i in range (0, 20):
@@ -94,8 +95,10 @@ class FiniteStateController(Node):
         
 
     def run_loop(self):
-        if self.closest_dist <= 0.03:
+        if self.closest_dist < 0.3:
             self.state = "prey"
+            print("change")
+
         if self.state == "predator":
             self.move_robot_predator()
         else:
