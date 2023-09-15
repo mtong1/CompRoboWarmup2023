@@ -18,11 +18,11 @@ class FiniteStateController(Node):
         timer_period = 1
         self.timer = self.create_timer(timer_period, self.run_loop)
 
-
     def parse_scans(self, msg):
         '''
-        Checks laserscan messages from /scan topic, figures out where the closest object
-        is by parsing each angle and finding the closest distance, as well as which angle.
+        Parses the /scan topic data according to which state it's in. If it's in "predator" state,
+        it will go towards the closest object and "tag" it. If it's in "prey" state, it will try
+        to avoid any close object in front of it.
         '''
         self.scan_msg = msg
         if self.state == "predator":
@@ -50,6 +50,9 @@ class FiniteStateController(Node):
             # print(f"closest distance; {self.closest_dist}")
 
     def move_robot_prey(self):
+        '''
+        Moves robot based on "prey" state behavior-- it moves away from any object in front of it.
+        '''
         print(self.state)
         if self.closest_angle <= 20 and self.closest_angle > 0: # if the object is on left side 
             self.move.linear.x = 0.0
@@ -70,8 +73,7 @@ class FiniteStateController(Node):
 
     def move_robot_predator(self):
         '''
-        Tells the robot to turn to a certain angle relative to its coordinate frame and
-        drive forwards.
+        Moves robot according to "predator" state behavior-- it moves towards the closest object.
         '''
         print(self.state)
         if self.closest_angle > 20 and self.closest_angle <= 180:
@@ -89,12 +91,14 @@ class FiniteStateController(Node):
             self.move.angular.z = 0.0
             self.move.linear.x = 1.0
             print("going forward")
-        print(f"linear = {self.move.linear}")
-        print(f"angular = {self.move.angular}")
+ 
         self.publisher.publish(self.move)
         
 
     def run_loop(self):
+        '''
+        Switches state from predator to prey when the robot "tags" something/someone.
+        '''
         if self.closest_dist < 0.3:
             self.state = "prey"
             print("change")
