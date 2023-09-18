@@ -5,11 +5,14 @@ from sensor_msgs.msg import LaserScan
 import math
 import numpy as np
 import time
+from visualization_msgs.msg import Marker
+
 
 class WallFollower(Node):
     def __init__(self):
         super().__init__('wall_follower')
         self.vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.marker = self.create_publisher(Marker,'visualization_marker', 10)
         self.laser = self.create_subscription(LaserScan, 'scan', self.parse_scan, 10)
         self.timer = self.create_timer(timer_period, self.run_loop)
         self.move = Twist()
@@ -105,6 +108,8 @@ class WallFollower(Node):
 
         # runs robot accordingly
         self.run_robot(move_angle)
+        marker = Marker() # initialize marker
+        marker.header.frame_id = "odom" 
 
 
 def main(args=None):
