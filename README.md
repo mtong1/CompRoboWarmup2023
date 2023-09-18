@@ -1,8 +1,6 @@
 # CompRoboWarmup2023
 
 ### TELEOP 
-For each behavior, describe the problem at a high-level. Include any relevant diagrams that help explain your approach. Discuss your strategy at a high-level and include any tricky decisions that had to be made to realize a successful implementation.
-
 The teleop node controls the robot’s forward, backwards, left, and right movement. We wanted to use the W, A, S, and D keys or WASD keys on the computer keyboard as arrow keys since they are popular for gaming. We used W and S to control the linear x movement of the robot and A and S to control the angular velocity.
 
 Our strategy at a high level was understanding the robots coordinate system. Once we had a good understanding of how it moved, we could send velocity commands using twist and publisher. We wanted clean movements so we set linear velocity to zero when it was turning and the angular velocity to zero when it was moving forward and backward. 
@@ -36,18 +34,21 @@ The bot iterates through each angle of the lidar data, and saves only the angle 
 The trickiest part of implementing this task was understanding how ROS timers and loops worked first, which helped to simplify the problem. When implementing this, we wanted to avoid calculating a “turn time” for the robot before commanding it to move. We realized after discussing with CA’s that a quick and easy solution for this problem was just a built-in part of ROS: if we just commanded the robot to turn endlessly, the object would eventually be in front of the robot, in which case the loop would reset and the robot would realize it could start going straight. 
 The primary limitation of this node is that it cannot determine what is an object versus a person. It will simply follow any object that it senses with its laser scan. Additionally, it will only follow a “person” that is within 3 meters of it, rather than the “closest person” in general. This limitation was intentionally added to simplify the task; Limiting the robot’s “following” range helps it to avoid following unwanted objects such as walls or further objects. 
 
-For each behavior, describe the problem at a high-level. Include any relevant diagrams that help explain your approach. Discuss your strategy at a high-level and include any tricky decisions that had to be made to realize a successful implementation.
 
 ![](images/image2.png)
 ### OBJECT AVOIDANCE
 We implemented the object avoidance node for the robot to avoid any object that is within 5 meters of its front side. The node subscribes to the /scan topic to access the robot laser scan, and publishes to /cmd_vel to command the robot how to move. 
 The bot was implemented similarly to person follower, but with a reversed behavior. The bot would sense if there was an object within 5 meters of the front side, specifically a 40 degree range about 0 degrees. Should it sense an object, it would then determine if the object was more towards its left or right (this can be determined given the angle saved is from 0-20 degrees, meaning the object is on its left, or 340-361 degrees, meaning the object is on its right). Depending on which side the object was more towards, the robot would turn towards its opposite direction until the object was out of its front sight. Only then would it continue driving forward. 
 The trickiest part of implementing this was actually trying to determine the best way to implement this task. Because of the possible complexity this problem could have, we had to decide what is the best way to simplify this problem to a more solvable manner, and how much abstraction is still enough for the code to still technically do the task it was asked. 
+
+
 ![](images/image3.png)
 ### FINITE STATE CONTROLLER
 The behavior of our finite state controller was to combine person follower and obstacle avoidance. The states were “predator” where it tried to reach the closest object and “prey” where it would try to run from the other objects. We combined the code by creating a state variable, and nesting each state’s code within an if statement that checks the state. The if statement is within the run loop and within the parse_scans methods since the different states used different techniques to read the lidar scan. We detected the transition between states when the robot is less than 0.3 meters away from its object. The initial inspiration behind the states was tag. 
 ![](images/image5.png)
 ![](images/image7.png)
+
+
 ### CODE STRUCTURE
  
 ### CHALLENGES
