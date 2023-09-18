@@ -10,7 +10,7 @@ class ObstacleAvoider(Node):
         self.publisher = self.create_publisher(Twist, 'cmd_vel', 10)
         self.move = Twist()
         self.scan_msg = None
-
+        self.closest_angle = 0
         timer_period = 0.5
         self.timer = self.create_timer(timer_period, self.run_loop)
 
