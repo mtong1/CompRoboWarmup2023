@@ -22,6 +22,8 @@ A limitation of the time calculations is it assumes the robot goes from 0 to the
 ### WALL FOLLOWER
 The wall follower node allows the robot to sense the wall nearest to its left, and drive parallel to it.The node subscribes to the /scan topic to access the robot laser scan, and publishes to /cmd_vel. 
 
+![](images/image.png)
+
 Our strategy was to have the robot look at the laser scanner message at both 45 and 135 degrees (relative to the robot's coordinate frame) in order to find how far away it is from the wall. Using trigonometry, the robot calculates the (x,y) coordinates of the wall vector relative to the robot, and shifts the vector over the robot plane. After calculating the difference between the angle of the wall and its own angle relative to the robot's frame, it rotates itself by the value to face a parallel path to the wall and rolls ahead indefinitely. 
 
 The trickiest part of this implementation was trying to get our math to work. The robot has to calculate the vector of the wall in terms of coordinates, which requires trigonometry. We had to work out the math on paper before even attempting to code it, and even with the code we ran into many technical errors that combined logicistic math mistakes and coding mistakes, which made it more difficult to debug. 
@@ -63,9 +65,12 @@ The behavior of our finite state controller combined person follower and obstacl
 
 
 ### CODE STRUCTURE
- 
+Our code is placed in a ROS package called warmup_project. For each assignment, we created a different node. Structurally, each node required some way to communicate with the robot about what we want it to see or do. Thus we included objects for publishers and subscribers to the topics /cmd_vel and /scan to tell the robot how to move and to scan, respectively. 
+
+For each node, we separated our code into methods according to what parts worked together. For example, we had methods called run_robot() that when called, would publish messages to /cmd_vel about how to move the robot according to calculations run in the run_loop() method, or information processed in the parse_scan() method. 
+
 ### CHALLENGES
-We faced multiple debugging challenges with the robot not interacting as we expected. Some common problems were forgetting to publish and not explicitly setting a robot’s speed at every set. 
+We faced multiple debugging challenges with the robot not interacting as we expected. Some common problems were forgetting to publish and not explicitly setting a robot’s speed at every set. More detailed challenges were mentioned above. 
 
 
 ### IMPROVEMENTS
