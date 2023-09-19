@@ -39,6 +39,8 @@ The primary limitation of this node is that it can only sense a wall to its left
 
 ![](images/image1.png)
 
+![](images/rviz_wall_follower.gif)
+
 ### PERSON FOLLOWER
 
 ![](images/person_follower.gif)
