@@ -81,33 +81,34 @@ class WallFollower(Node):
             return
         
         # calculating l1 distance from wall
-        angle1 = math.pi/4
-        l1_x = math.cos(angle1)*self.l1
-        l1_y = math.sin(angle1)*self.l1
+        # angle1 = math.pi/4
+        # l1_x = math.cos(angle1)*self.l1
+        # l1_y = math.sin(angle1)*self.l1
 
-        # calculating l2 distance from wall
-        angle2 = math.pi*3/4
-        l2_x = math.cos(angle2)*self.l2
-        l2_y = math.sin(angle2)*self.l2
+        # # calculating l2 distance from wall
+        # angle2 = math.pi*3/4
+        # l2_x = math.cos(angle2)*self.l2
+        # l2_y = math.sin(angle2)*self.l2
 
-        # shift the wall coordinates over robot frame
-        wall_x = l1_x - l2_x
-        wall_y = l1_y - l2_y
+        # # shift the wall coordinates over robot frame
+        # wall_x = l1_x - l2_x
+        # wall_y = l1_y - l2_y
 
-        # angle between two vectors
-        robot_frame = [1,0]
-        wall_vec = [wall_x, wall_y]
-        parta = np.dot(robot_frame, wall_vec)
-        partb = np.multiply(self.magnitude(robot_frame),self.magnitude(wall_vec))
+        # # angle between two vectors
+        # robot_frame = [1,0]
+        # wall_vec = [wall_x, wall_y]
+        # parta = np.dot(robot_frame, wall_vec)
+        # partb = np.multiply(self.magnitude(robot_frame),self.magnitude(wall_vec))
 
-        if partb == 0: # a simple check to ensure no errors
-            print("is 0")
-            return
-        partc = parta/partb
-        move_angle = math.acos(partc)
-        print(f"move angle: {move_angle}")
+        # if partb == 0: # a simple check to ensure no errors
+        #     print("is 0")
+        #     return
+        # partc = parta/partb
+        # move_angle = math.acos(partc)
 
-        # runs robot accordingly
+        # runs robot accordingly        
+        move_angle = math.acos((self.l1+self.l2)/(math.sqrt((2*(self.l1**2))+(2*(self.l2)**2))))
+
         self.run_robot(move_angle)
         marker = Marker() # initialize marker
         marker.header.frame_id = "odom" 
