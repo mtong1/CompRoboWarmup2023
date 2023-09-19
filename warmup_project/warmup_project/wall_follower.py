@@ -12,7 +12,7 @@ class WallFollower(Node):
     def __init__(self):
         super().__init__('wall_follower')
         self.vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
-        self.marker = self.create_publisher(Marker,'visualization_marker', 10)
+        self.vis_marker = self.create_publisher(Marker,'visualization_marker', 10)
         self.laser = self.create_subscription(LaserScan, 'scan', self.parse_scan, 10)
         timer_period = 2
         self.timer = self.create_timer(timer_period, self.run_loop)
@@ -67,6 +67,49 @@ class WallFollower(Node):
         self.move.angular.z = 0.0
         self.vel_pub.publish(self.move)
 
+    def publish_markers(self):
+        '''
+        Publishes two markers at where the wall is being sensed.
+        '''
+        # calculating l1 distance from wall
+        angle1 = math.pi/4
+        l1_x = math.cos(angle1)*self.l1
+        l1_y = math.sin(angle1)*self.l1
+
+        # calculating l2 distance from wall
+        angle2 = math.pi*3/4
+        l2_x = math.cos(angle2)*self.l2
+        l2_y = math.sin(angle2)*self.l2
+
+        marker_1 = Marker() # initialize marker
+        marker_1.header.frame_id = "base_link" 
+        marker_1.type = Marker.SPHERE
+        marker_1.action = Marker.ADD
+        marker_1.pose.position.x = l1_x
+        marker_1.pose.position.y = l1_y
+        marker_1.pose.position.z = 0.0
+        marker_1.scale.x = 0.1
+        marker_1.scale.y = 0.1
+        marker_1.scale.z = 0.1
+        marker_1.color.g = 1.0
+        marker_1.color.a = 1.0
+        self.vis_marker.publish(marker_1)
+
+        marker_2 = Marker()
+        marker_2.header.frame_id = "base_link"
+        marker_2.type = Marker.SPHERE
+        marker_2.action = Marker.ADD
+        marker_2.pose.position.x = l2_x
+        marker_2.pose.position.y = l2_y
+        marker_2.pose.position.z = 0.0
+        marker_2.scale.x = 0.1
+        marker_2.scale.y = 0.1
+        marker_2.scale.z = 0.1
+        marker_2.color.b = 1.0
+        marker_2.color.a = 1.0
+
+        self.vis_marker.publish(marker_2)
+
     def run_loop(self):
         '''
         Using distances calculated at 45 and 135 degrees from the robot,
@@ -80,38 +123,14 @@ class WallFollower(Node):
         if self.l1 == math.inf or self.l2 == math.inf:
             return
         
-        # calculating l1 distance from wall
-        # angle1 = math.pi/4
-        # l1_x = math.cos(angle1)*self.l1
-        # l1_y = math.sin(angle1)*self.l1
+        self.publish_markers()
 
-        # # calculating l2 distance from wall
-        # angle2 = math.pi*3/4
-        # l2_x = math.cos(angle2)*self.l2
-        # l2_y = math.sin(angle2)*self.l2
-
-        # # shift the wall coordinates over robot frame
-        # wall_x = l1_x - l2_x
-        # wall_y = l1_y - l2_y
-
-        # # angle between two vectors
-        # robot_frame = [1,0]
-        # wall_vec = [wall_x, wall_y]
-        # parta = np.dot(robot_frame, wall_vec)
-        # partb = np.multiply(self.magnitude(robot_frame),self.magnitude(wall_vec))
-
-        # if partb == 0: # a simple check to ensure no errors
-        #     print("is 0")
-        #     return
-        # partc = parta/partb
-        # move_angle = math.acos(partc)
-
-        # runs robot accordingly        
-        move_angle = math.acos((self.l1+self.l2)/(math.sqrt((2*(self.l1**2))+(2*(self.l2)**2))))
+        # derived equation of distance between two vectors        
+        move_angle = math.acos((self.l1+self.l2)/(math.sqrt(2*(self.l1**2+self.l2**2))))
 
         self.run_robot(move_angle)
-        marker = Marker() # initialize marker
-        marker.header.frame_id = "odom" 
+
+
 
 
 def main(args=None):
