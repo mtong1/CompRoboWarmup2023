@@ -14,11 +14,11 @@ class WallFollower(Node):
         self.vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         self.vis_marker = self.create_publisher(Marker,'visualization_marker', 10)
         self.laser = self.create_subscription(LaserScan, 'scan', self.parse_scan, 10)
-        timer_period = 2
+        timer_period = 0.2
         self.timer = self.create_timer(timer_period, self.run_loop)
         self.move = Twist()
         self.linear_speed = 0.3
-        self.angular_speed = 2.0
+        self.angular_speed = 0.1
         self.l1 = None
         self.l2 = None
         self.scan_msg = None
@@ -47,17 +47,29 @@ class WallFollower(Node):
         much you want to rotate. After determining speed, the robot will
         move accordingly then drive straight.
         '''
-        print("run robot")
-        turn_time = (angle)/self.angular_speed
-        self.move.linear.x = 0.0
-        self.move.angular.z = -1 * self.angular_speed
+        # print("run robot")
+        # turn_time = (angle)/self.angular_speed
+        # self.move.linear.x = 0.0
+        # self.move.angular.z = -1 * self.angular_speed
+        # self.vel_pub.publish(self.move)
+        # time.sleep(turn_time)
+        print(f"angle: {angle}")
+        if angle > 0 and angle < 0.04:
+            self.move.angular.z = 0.0
+            self.move.linear.x = self.linear_speed
+            print("forward")
+        else:
+            self.move.linear.x = 0.0
+            self.move.angular.z = -1*self.angular_speed
+            print("turning")
+        
         self.vel_pub.publish(self.move)
-        time.sleep(turn_time)
-        print("turned")
-        self.move.angular.z = 0.0
-        self.move.linear.x = self.linear_speed
-        self.vel_pub.publish(self.move)
-        print("straight")
+
+        # print("turned")
+        # self.move.angular.z = 0.0
+        # self.move.linear.x = self.linear_speed
+        # self.vel_pub.publish(self.move)
+        # print("straight")
 
     def robot_stop(self):
         '''
@@ -123,7 +135,7 @@ class WallFollower(Node):
         if self.l1 == math.inf or self.l2 == math.inf:
             return
         
-        self.publish_markers()
+        # self.publish_markers()
 
         # derived equation of distance between two vectors        
         move_angle = math.acos((self.l1+self.l2)/(math.sqrt(2*(self.l1**2+self.l2**2))))
