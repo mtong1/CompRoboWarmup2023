@@ -4,6 +4,20 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Header
 from odom_helper import TFHelper
 import time 
+from enum import Enum
+
+NEOTO_LENGTH = 1
+
+class State(Enum): 
+    MOVE_STRAIGHT_X_RIGHT = "move straight in x direction"
+    MOVE_STRAIGHT_X_LEFT = "move straight in x direction"
+    MOVE_STRAIGHT_y = "move straight in y direction"
+    TURN_lEFT_2 = "Turn 90 degrees left"
+    TURN_RIGHT_2 = "Turn 90 degrees right"
+    TURN_lEFT_1 = "Turn 90 degrees left"
+    TURN_RIGHT_1 = "Turn 90 degrees right"
+    FOUND_OBJECT = "Found object"
+    COMPLETE_SERACH = "Completed area search"
 
 class Lawnmower(Node):
     def __init__(self):
@@ -20,9 +34,12 @@ class Lawnmower(Node):
         self.init_y = 0
         self.current_x = 0
         self.current_y = 0
+        self.next_y = 0
         self.max_x = 6
         self.max_y = 6
         self.linear_speed = 0.6 # CHANGE VALUE 
+        self.init_angle = 0
+        self.current_angle = 0
         ## orienting robot in direction of most weighted/closest objects 
         timer_period = 1
         self.map_frame = "map"          # the name of the map coordinate frame
@@ -33,45 +50,33 @@ class Lawnmower(Node):
 
 
 
-    def move_straight(self, x, y):
+    def move_straight_X(self):
         '''
-        Moves robot straight until certain location (x,y)
+        Moves robot straight
         '''
-        x_difference =  abs(x-self.current_x)
-        y_difference =  abs(y - self.current_y)
-        if x_difference > self.threshold and y_difference > self.threshold:
-            self.move.linear.x = self.linear_speed
-            self.publisher.publish(self.move)
-            self.state = "move_straight"
-        else: 
-            self.state = "turn"
-    def turn(self): 
-        '''
-        Switch state to turn left or right 
-        '''
-        side = abs(self.max_x -self.current_x)
-        if side < self.threshold: 
-            #Close to max x need to turn left 
-            self.state = "turn_left"
-        else: 
-            #Close to min x, need to turn right 
-            self.state = "turn_right"
-
-    def move_up_right(self):
-        '''
-        Moves robot according to "predator" state behavior-- it moves towards the closest object.
-        '''
-        print(self.state)
     
+        self.move.linear.x = self.linear_speed
         self.publisher.publish(self.move)
-    def move_up_left(self):
+    def turn_right(self):
+        '''
+        Move right 
+        '''
+        self.move.angular.x = self.angular_speed
         self.publisher.publish(self.move)
+
+    def turn_left (self):
+        '''
+        Turn left
+        '''
+        self.move.angular.x = self.angular_speed
+        self.publisher.publish(self.move)
+
     def check_object(self):
         '''
         Check if the object is in the current area 
         '''
         if self.x_object < self.threshold and self.y_object < self.threshold: 
-            self.state = "find_object"
+            self.state = elf.check_object()
     def find_object(): 
         """
         Publish message to main brain 
@@ -80,12 +85,37 @@ class Lawnmower(Node):
     def complete_search():
         print("Send message that area assigned is searched")
 
+    def choose_state(self): 
+        # Final States
+        if self.check_object(): 
+            self.state = State.FOUND_OBJECT
+        if self.next_y >= self.max_y:
+            self.state = State.COMPLETE_SERACH
+        # Search Loop
+        if self.state == State.MOVE_STRAIGHT_X_RIGHT and self.current_x >= self.max_x: 
+            self.state = State.TURN_lEFT
+        elif self.state == State.TURN_lEFT_1 and self.current_angle >= 90: 
+            self.state = State.MOVE_STRAIGHT_y
+            self.next_y = self.current_y + NEOTO_LENGTH
+        elif self.state == State.MOVE_STRAIGHT_y and self.current_y >= self.next_y: 
+            self.state = State.TURN_lEFT_2
+        elif self.state == State.TURN_lEFT_2 and self.current_angle >= 180:
+            self.state = State.MOVE_STRAIGHT_X_LEFT
+        elif self.state == State.MOVE_STRAIGHT_X_LEFT and self.current_x <= self.min_x: 
+            self.state = State.TURN_RIGHT_1
+        elif self.state == State.TURN_RIGHT_1 and self.current_angle >= 90: 
+            self.state = State.MOVE_STRAIGHT_y
+            self.next_y = self.current_y + NEOTO_LENGTH
+        elif self.state == State.MOVE_STRAIGHT_y and self.current_y >= self.next_y: 
+            self.state = State.TURN_RIGHT_2
+        elif self.state == State.TURN_RIGHT_2 and self.current_angle >= 0:
+            self.state = State.MOVE_STRAIGHT_X_RIGHT
 
     def run_loop(self):
         '''
         Switches state from predator to prey when the robot "tags" something/someone.
         '''
-        #logic for turning
+
 
         (new_pose, delta_t) = self.transform_helper.get_matching_odom_pose(self.odom_frame,
                                                                            self.base_frame,
@@ -94,20 +124,20 @@ class Lawnmower(Node):
         self.current_y = new_pose.position.y
         self.check_object()
         match self.state:
-            case "move_straight":
-                self.move_straight()
-            case "turn":
-                self.turn()
-            case "turn_right":
-                self.move_up_right()
-            case "turn_left":
-                self.move_up_left
-            case "find_object": 
-                self.find_object
-            case "complete_area": 
-                self.complete_search
+            case State.MOVE_STRAIGHT_X:
+                self.move_straight_X()
+            case State.TURN_RIGHT_1:
+                self.turn_right()
+            case State.TURN_lEFT_1:
+                self.turn_left
+            case State.MOVE_STRAIGHT_y:
+                self.move_straight_y()
+            case State.FOUND_OBJECT: 
+                self.find_object()
+            case State.COMPLETE_SERACH: 
+                self.complete_search()
             case default:
-                return "stuck"
+                raise Exception("Robot not in valid state.")
 
 def main(args=None):
     rclpy.init(args=args)
